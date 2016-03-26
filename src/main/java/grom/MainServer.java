@@ -37,12 +37,17 @@ public class MainServer extends JavaHttpServer {
             byte[] cdata = classifiers.get(id);
             return cdata == null ? new Classifier(2) : (Classifier)conf.asObject(cdata);
         }
-
+        public static long[] getWords(List<String> input) {
+            long[] l = new long[input.size()];
+            for (int i = 0; i < l.length; i++)
+                l[i] = (long) Integer.parseInt(input.get(i));
+            return l;
+        }
         public void configureRoutes() {
             get("/learn", request -> {
                     String id = request.getParam("id",DEFAULT_ID);
                     Classifier classifier = getClassifier(id);
-                    String[] words = request.getParams("words").toArray(new String[] {});
+                    long[] words = getWords(request.getParams("words"));
                     int which = request.getIntParam("class");
                     classifier.learn(which, words);
 
@@ -52,8 +57,7 @@ public class MainServer extends JavaHttpServer {
 
             get("/query", request -> {
                     Classifier classifier = getClassifier(request.getParam("id",DEFAULT_ID));
-
-                    String[] words = request.getParams("words").toArray(new String[] {});
+                    long[] words = getWords(request.getParams("words"));
                     return classifier.probScores(words);
                 });
         }

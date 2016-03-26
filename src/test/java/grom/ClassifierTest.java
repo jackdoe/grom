@@ -11,7 +11,7 @@ public class ClassifierTest {
     @Test
     public void testClassifier() throws Exception {
         Classifier c = new Classifier(2);
-        String[] data = {"Hello", "World"};
+        long[] data = {2, 1};
         c.learn(GOOD,data);
         assertEquals(2, c.datas[GOOD].total);
         assertEquals(0, c.datas[BAD].total);

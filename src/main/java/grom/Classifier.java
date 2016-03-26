@@ -15,14 +15,9 @@ public class Classifier implements Serializable {
             datas[i] = new ClassData();
     }
 
-    public void learn(int which, String[] document) {
-        for (String s : document)
-            datas[which].inc(s);
-    }
-
-    public void wordFrequencies(int which, String[] words, BiConsumer<String, Double> consumer) {
-        for (String s : words)
-            consumer.accept(s, datas[which].getWordProb(s));
+    public void learn(int which, long[] document) {
+        for (long word : document)
+            datas[which].inc(word);
     }
 
     public double[] getPriors() {
@@ -40,15 +35,15 @@ public class Classifier implements Serializable {
         return priors;
     }
 
-    public double[] probScores(String[] document) {
+    public double[] probScores(long[] document) {
         double[] scores = getPriors(); // just use one array for both dest scores
                                        // and priors
         double sum = 0;
 
         for (int i = 0; i < datas.length; i++) {
             double score = scores[i];
-            for (String s : document)
-                score *= datas[i].getWordProb(s);
+            for (long word : document)
+                score *= datas[i].getWordProb(word);
             scores[i] = score;
             sum += score;
         }
@@ -63,27 +58,50 @@ public class Classifier implements Serializable {
 
     public class ClassData implements Serializable {
         public static final double defaultProb = 0.00000000001D;
+        public long[] freqs = null;
         public int total;
-        // XXX: move this to something more compact
-        public Map<String, Integer> freqs = new HashMap<String,Integer>();
 
-        public void inc(String word) {
+        // use one sorted array of longs (word << 32 | frequency) instead of Map<String,Counter>
+        // Arrays.binarySearch returns (-insertion_point - 1), so when we look for a key
+        // we just have to do if (freqs[insertion_point] >> 32) == word), the binary
+        // search should never find exact match because we are searching for (word << 32)
+        // but what we actually store is 'word << 31 | frequency (minimum 1)'
+        public int insertionPoint(long word) {
+            int idx = Arrays.binarySearch(freqs, word << 32);
+            if (idx < 0)
+                return -(idx + 1);
+
+            throw new IllegalStateException("should not be able to find exact match");
+        }
+
+        public void inc(long word) {
             total++;
-            freqs.compute(word, (k,v) -> (v == null) ? 1 : v + 1);
+
+            if (freqs == null) {
+                freqs = new long[1];
+                freqs[0] = (word << 32L) | 1L;
+            } else {
+                int ip = insertionPoint(word);
+                if (ip >= 0 && (freqs[ip] >> 32L) == word) {
+                    freqs[ip]++;
+                } else {
+                    freqs = Arrays.copyOf(freqs, freqs.length + 1);
+                    for (int i = freqs.length - 1; i > ip; i--) {
+                        freqs[i] = freqs[i - 1];
+                    }
+                    freqs[ip] = (word << 32L) | 1L;
+                }
+            }
         }
 
-        public double getWordProb(String word) {
-            Integer c = freqs.get(word);
-            if (c == null)
-                return defaultProb;
-            return ((double) c) / ((double) total);
-        }
-
-        public double getWordsProb(String[] words) {
-            double prob = 1D;
-            for (String s : words)
-                prob *= getWordProb(s);
-            return prob;
+        public double getWordProb(long word) {
+            if (freqs != null) {
+                int ip = insertionPoint(word);
+                if (ip >= 0 && (freqs[ip] >> 32L) == word) {
+                    return (freqs[ip] & 0xFFFFFFFFL) / (double) total;
+                }
+            }
+            return defaultProb;
         }
     }
 }
