@@ -67,7 +67,7 @@ public class Classifier implements Serializable {
         // search should never find exact match because we are searching for (word << 32)
         // but what we actually store is 'word << 31 | frequency (minimum 1)'
         public int insertionPoint(long word) {
-            int idx = Arrays.binarySearch(freqs, word << 32);
+            int idx = Arrays.binarySearch(freqs, word << 32L);
             if (idx < 0)
                 return -(idx + 1);
 
@@ -82,7 +82,7 @@ public class Classifier implements Serializable {
                 freqs[0] = (word << 32L) | 1L;
             } else {
                 int ip = insertionPoint(word);
-                if (ip >= 0 && (freqs[ip] >> 32L) == word) {
+                if (ip >= 0 && ip < freqs.length && (freqs[ip] >> 32L) == word) {
                     freqs[ip]++;
                 } else {
                     freqs = Arrays.copyOf(freqs, freqs.length + 1);
@@ -97,7 +97,7 @@ public class Classifier implements Serializable {
         public double getWordProb(long word) {
             if (freqs != null) {
                 int ip = insertionPoint(word);
-                if (ip >= 0 && (freqs[ip] >> 32L) == word) {
+                if (ip >= 0 && ip < freqs.length && (freqs[ip] >> 32L) == word) {
                     return (freqs[ip] & 0xFFFFFFFFL) / (double) total;
                 }
             }
