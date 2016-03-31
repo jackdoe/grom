@@ -30,6 +30,8 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
+  "org.scala-lang.modules" % "scala-java8-compat_2.11" % "0.7.0",
+
   "com.twitter.finatra" %% "finatra-http" % versions.finatra,
   "com.twitter.finatra" %% "finatra-httpclient" % versions.finatra,
   "ch.qos.logback" % "logback-classic" % versions.logback,

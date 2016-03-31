@@ -15,7 +15,7 @@ public class Classifier implements Serializable {
             datas[i] = new ClassData();
     }
 
-    public void learn(int which, long[] document) {
+    public void learn(int which, List<Long> document) {
         for (long word : document)
             datas[which].inc(word);
     }
@@ -35,7 +35,7 @@ public class Classifier implements Serializable {
         return priors;
     }
 
-    public double[] probScores(long[] document) {
+    public double[] probScores(List<Long> document) {
         double[] scores = getPriors(); // just use one array for both dest scores
                                        // and priors
         double sum = 0;

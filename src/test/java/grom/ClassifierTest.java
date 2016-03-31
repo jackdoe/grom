@@ -1,5 +1,8 @@
 package grom;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
 import org.junit.Ignore;
 import static org.junit.Assert.assertEquals;
@@ -11,7 +14,9 @@ public class ClassifierTest {
     @Test
     public void testClassifier() throws Exception {
         Classifier c = new Classifier(2);
-        long[] data = {2, 1};
+        List<Long> data = new ArrayList<>();
+        data.add(2L);
+        data.add(1L);
         c.learn(GOOD,data);
         assertEquals(2, c.datas[GOOD].total);
         assertEquals(0, c.datas[BAD].total);
