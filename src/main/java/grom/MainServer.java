@@ -14,8 +14,6 @@ import org.nustaq.serialization.FSTConfiguration;
 import java.io.*;
 public class MainServer extends JavaHttpServer {
     public static class MainController extends JavaController {
-        public static final int GOOD = 0;
-        public static final int BAD = 1;
         public static FSTConfiguration conf = FSTConfiguration.createDefaultConfiguration();
         public static final String DEFAULT_ID = "_default_";
 
